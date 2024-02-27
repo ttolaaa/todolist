@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://thingproxy.freeboard.io/fetch/https://nanameue-front-end-candidate-test.vercel.app/api/tola/todos";
+const BASE_URL = "https://nanameue-front-end-candidate-test.vercel.app/api/tola/todos";
 
 export const fetchTodos = async () => {
     try {
@@ -26,6 +26,15 @@ export const toggleTodo = async (todoId: string) => {
         return response.data;
     } catch (error: any) {
         throw new Error(error?.response?.data?.error || "Error toggling todo");
+    }
+};
+
+export const editTodo = async (todoId: string, text: string) => {
+    try {
+        const response = await axios.put(BASE_URL + `/${todoId}/edit`, { text });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error?.response?.data?.error || "Error editing todo");
     }
 };
 

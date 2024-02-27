@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./TodoListing.module.css";
 
 import { LuMoreHorizontal, LuCheck } from "react-icons/lu";
+import { FaRegEdit } from "react-icons/fa";
 import { TodoProps } from "../../components/TodoListComponent";
 
 interface TodoListingProps {
@@ -12,6 +13,7 @@ interface TodoListingProps {
   handleCheckboxChange: Function;
   handleToggleDeleteButton: Function;
   handleDeleteTodoBtnClick: Function;
+  handleEditTodoSubmit: Function;
 }
 
 const TodoListing: React.FC<TodoListingProps> = (props) => {
@@ -23,9 +25,13 @@ const TodoListing: React.FC<TodoListingProps> = (props) => {
     handleCheckboxChange,
     handleToggleDeleteButton,
     handleDeleteTodoBtnClick,
+    handleEditTodoSubmit,
   } = props;
 
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const [editID, setEditID] = useState<string | null>(null);
+  const [editedText, setEditedText] = useState<string>("");
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,6 +45,28 @@ const TodoListing: React.FC<TodoListingProps> = (props) => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
+  const handleEditClick = (todoId: string, todoText: string) => {
+    setEditID(todoId);
+    setEditedText(todoText);
+  };
+
+  const handleEditInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedText(event.target.value);
+  };
+
+  const handleSubmitEdit = async () => {
+    await handleEditTodoSubmit(editID, editedText);
+    setEditID(null);
+    setEditedText("");
+  }
+
+  const handleEditInputOnKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // detect enter key to allow submit as well
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      handleSubmitEdit();
+    }
+  };
 
   return (
     <div className={styles.todo_listing}>
@@ -63,11 +91,22 @@ const TodoListing: React.FC<TodoListingProps> = (props) => {
               }
             </div>
 
-            <span
-              className={`${styles.todo_texts} ${todo.isDone ? styles.todo_texts_strike : ""}`}
-            >
-              {todo.text}
-            </span>
+            {editID === todo._id ? (
+              <input
+                autoFocus={true}
+                type="text"
+                value={editedText}
+                className={styles.edit_input}
+                onChange={handleEditInputChange}
+                onBlur={handleSubmitEdit}
+                onKeyDown={handleEditInputOnKeyDown}
+              />
+            ) : (
+              <span className={`${styles.todo_texts} ${todo.isDone ? styles.todo_texts_strike : ""}`}>
+                {todo.text}
+              </span>
+            )}
+
             <LuMoreHorizontal
               size={26}
               color="#9796A9"
@@ -80,6 +119,12 @@ const TodoListing: React.FC<TodoListingProps> = (props) => {
             {itemIdToDelete === todo._id &&
               <button ref={deleteButtonRef} className={styles.delete_button} onClick={() => handleDeleteTodoBtnClick(todo._id)}>Delete</button>
             }
+            <FaRegEdit
+              size={24}
+              color="#9796A9"
+              className={styles.edit_button}
+              onClick={() => handleEditClick(todo._id, todo.text)}
+            />
           </div>
         )
       })}

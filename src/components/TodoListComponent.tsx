@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, ChangeEvent, FormEvent } from "reac
 import styles from "./TodoListComponent.module.css";
 import "react-toastify/dist/ReactToastify.css";
 
-import { fetchTodos, createTodo, deleteTodo, toggleTodo } from "../api/api";
+import { fetchTodos, createTodo, deleteTodo, toggleTodo , editTodo} from "../api/api";
 import { ToastContainer, Zoom, toast } from "react-toastify";
 
 import BeatLoader from "react-spinners/BeatLoader";
@@ -89,7 +89,6 @@ const TodoListComponent: React.FC = () => {
     setShowLoading(false);
   };
 
-
   const handleCheckboxChange = async (todoId: string, isDone: boolean) => {
     setShowLoading(true);
     try {
@@ -104,7 +103,7 @@ const TodoListComponent: React.FC = () => {
     }
     setShowLoading(false);
   };
-
+  
   const handleToggleDeleteButton = (todoId: any) => {
     setItemIdToDelete(prevTodoId => !prevTodoId ? todoId : null);
   };
@@ -113,6 +112,28 @@ const TodoListComponent: React.FC = () => {
     setShowDialog(true);
     setItemIdToDelete(todoId);
   };
+  
+  const handleEditTodoSubmit = async (todoId: string, editedTodoText: string) => {
+    const itemToUpdate = todos?.find(todo => todo._id === todoId);
+    if(itemToUpdate?.text === editedTodoText) {
+      // prevent update when text has not been changed
+      return;
+    }
+
+    setShowLoading(true);
+    try {
+      await editTodo(todoId, editedTodoText);
+      const updatedTodos = todos.map(todo =>
+        todo._id === todoId ? { ...todo, text: editedTodoText } : todo
+      );
+      setTodos(updatedTodos);
+      showSuccessToast("Todo has been updated");
+    } catch (error: any) {
+      showErrorToast(error.message || "Failed to update todo.");
+    }
+    setShowLoading(false);
+  };
+
 
   const handleCancelDialog = () => {
     setShowDialog(false);
@@ -131,9 +152,7 @@ const TodoListComponent: React.FC = () => {
     }
     setShowLoading(false)
     setShowDialog(false)
-
   }
-
 
   return (
     <div className={styles.container}>
@@ -159,6 +178,7 @@ const TodoListComponent: React.FC = () => {
           handleCheckboxChange={handleCheckboxChange}
           handleToggleDeleteButton={handleToggleDeleteButton}
           handleDeleteTodoBtnClick={handleDeleteTodoBtnClick}
+          handleEditTodoSubmit={handleEditTodoSubmit}
         />
       </div>
 
